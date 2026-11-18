@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f3eee6">
+  <meta name="description" content="Seu provador criativo: experimente roupas, monte combinações e encontre seu próximo look." />
+  <title>Veste-se — seu provador criativo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f3eee6;
+      --paper-deep: #ebe4da;
+      --ink: #292b27;
+      --muted: #77776d;
+      --line: #ded8ce;
+      --white: #fffdf9;
+      --rose: #ce8279;
+      --green: #879880;
+      --gold: #d3a552;
+      --shadow: 0 16px 42px rgb(65 55 42 / 9%);
+      font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 340px; min-height: 100vh; color: var(--ink); background: var(--paper); }
+    button, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, input:focus-visible { outline: 3px solid #d5a257; outline-offset: 3px; }
+    .app-shell { width: min(1540px, 100%); min-height: 100vh; margin: auto; padding: 0 42px 32px; }
+
+    .topbar { height: 82px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: var(--ink); }
+    .brand-mark { width: 37px; height: 37px; display: grid; place-items: center; border: 1px solid var(--ink); border-radius: 50%; font-family: Georgia, serif; font-size: 19px; font-style: italic; }
+    .brand-name { font-family: Georgia, "Times New Roman", serif; font-size: 21px; letter-spacing: .01em; }
+    .brand-note { margin-left: 7px; color: var(--muted); font-size: 10px; letter-spacing: .13em; text-transform: uppercase; }
+    .top-actions { display: flex; align-items: center; gap: 11px; }
+    .status { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 12px; }
+    .status::before { width: 7px; height: 7px; content: ""; border-radius: 50%; background: #88a17d; }
+    .icon-button { width: 39px; height: 39px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 50%; background: transparent; cursor: pointer; transition: background .2s, transform .2s; }
+    .icon-button:hover { transform: translateY(-2px); background: var(--white); }
+    .icon-button svg { width: 17px; height: 17px; }
+
+    .page-intro { display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 27px 0 24px; }
+    .eyebrow { margin: 0 0 7px; color: #8d7964; font-size: 10px; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+    h1 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: clamp(29px, 3vw, 39px); font-weight: 400; line-height: 1.08; }
+    .intro-copy { max-width: 330px; margin: 0 0 3px; color: var(--muted); font-size: 13px; line-height: 1.65; }
+
+    .workspace { display: grid; grid-template-columns: minmax(255px, 298px) minmax(390px, 1fr) minmax(230px, 280px); gap: 19px; align-items: stretch; }
+    .panel { min-width: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 5px; background: rgb(255 253 249 / 74%); }
+    .wardrobe { min-height: 650px; display: flex; flex-direction: column; }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; padding: 18px 17px 15px; }
+    .panel-title { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 20px; font-weight: 400; }
+    .count { color: var(--muted); font-size: 11px; }
+    .search-wrap { position: relative; margin: 0 15px 13px; }
+    .search-wrap svg { position: absolute; top: 50%; left: 12px; width: 15px; height: 15px; color: var(--muted); transform: translateY(-50%); pointer-events: none; }
+    .search-input { width: 100%; height: 40px; padding: 0 12px 0 36px; border: 1px solid var(--line); border-radius: 3px; background: var(--white); color: var(--ink); font-size: 12px; }
+    .category-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; padding: 0 15px 14px; }
+    .category-button { min-height: 35px; display: flex; align-items: center; gap: 8px; padding: 0 9px; border: 1px solid transparent; border-radius: 3px; background: transparent; color: #64645d; text-align: left; font-size: 11px; cursor: pointer; transition: background .16s, color .16s, border-color .16s; }
+    .category-button:hover { background: #f4eee5; }
+    .category-button[aria-pressed="true"] { border-color: #dfcfc1; background: #f0e5db; color: #493c32; }
+    .category-icon { width: 17px; color: #927d69; font-size: 15px; text-align: center; }
+    .catalog-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px 9px; border-top: 1px solid var(--line); }
+    .catalog-label { margin: 0; color: #78756d; font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .items-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; overflow: auto; padding: 3px 15px 15px; scrollbar-color: #c9bfb1 transparent; scrollbar-width: thin; }
+    .item-card { min-width: 0; padding: 8px; border: 1px solid #e8e1d8; border-radius: 3px; background: #fffefa; text-align: left; cursor: pointer; transition: border-color .18s, transform .18s, background .18s; }
+    .item-card:hover { transform: translateY(-2px); border-color: #c3a998; }
+    .item-card[aria-pressed="true"] { border-color: #a77c66; background: #f8f0e9; }
+    .item-art { height: 71px; display: grid; place-items: center; margin-bottom: 6px; overflow: hidden; border-radius: 2px; background: var(--swatch, #eee7df); }
+    .item-art svg { width: 57px; height: 62px; filter: drop-shadow(0 3px 2px rgb(41 34 27 / 12%)); }
+    .item-name { display: block; overflow: hidden; color: #46453f; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .item-meta { display: block; margin-top: 3px; color: #89857d; font-size: 9px; }
+    .empty-state { grid-column: 1 / -1; padding: 25px 8px; color: var(--muted); text-align: center; font-size: 12px; line-height: 1.6; }
+
+    .fitting-room { min-height: 650px; display: flex; flex-direction: column; }
+    .stage-toolbar { min-height: 65px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 17px; border-bottom: 1px solid var(--line); }
+    .view-tabs { display: flex; align-items: center; gap: 4px; }
+    .view-tab { position: relative; min-height: 37px; padding: 0 12px; border: 0; border-radius: 3px; background: transparent; color: #79756d; font-size: 11px; cursor: pointer; }
+    .view-tab[aria-selected="true"] { background: #ece5dc; color: #34342e; }
+    .view-tab[aria-selected="true"]::after { position: absolute; right: 12px; bottom: 4px; left: 12px; height: 1px; content: ""; background: var(--rose); }
+    .stage-tools { display: flex; gap: 7px; }
+    .tool-button { width: 35px; height: 35px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 3px; background: var(--white); cursor: pointer; transition: border-color .18s, background .18s; }
+    .tool-button:hover { border-color: #b89a7e; background: #f5ede3; }
+    .tool-button svg { width: 16px; height: 16px; }
+    .bulb-button { color: #896b36; }
+    .stage { position: relative; flex: 1; min-height: 510px; display: grid; place-items: center; overflow: hidden; background-color: #eae4da; background-image: radial-gradient(ellipse at 50% 46%, rgb(255 255 255 / 62%) 0, rgb(255 255 255 / 22%) 37%, transparent 68%), repeating-linear-gradient(90deg, transparent 0 83px, rgb(125 107 83 / 3%) 84px 85px); }
+    .stage::before, .stage::after { position: absolute; z-index: 0; content: ""; pointer-events: none; }
+    .stage::before { top: 0; right: 11%; bottom: 0; width: 1px; background: rgb(125 107 83 / 9%); }
+    .stage::after { right: 8%; bottom: 10%; left: 8%; height: 1px; background: rgb(125 107 83 / 14%); }
+    .stage-caption { position: absolute; z-index: 2; top: 19px; left: 20px; display: grid; gap: 4px; }
+    .stage-caption strong { font-family: Georgia, "Times New Roman", serif; font-size: 17px; font-weight: 400; }
+    .stage-caption span { color: var(--muted); font-size: 10px; letter-spacing: .04em; }
+    .model-wrap { position: relative; z-index: 1; width: min(83%, 410px); height: min(480px, 80%); min-height: 390px; display: grid; place-items: center; transform-origin: center bottom; transition: transform .3s ease; }
+    .mannequin { width: 100%; height: 100%; overflow: visible; filter: drop-shadow(0 15px 11px rgb(55 47 39 / 10%)); }
+    .body-shape { fill: var(--skin, #d6a887); }
+    .hair-back, .hair-front { fill: var(--hair, #554137); transition: fill .2s; }
+    .garment { display: none; }
+    .garment.is-on { display: initial; animation: garment-in .38s cubic-bezier(.2,.8,.2,1) both; }
+    .garment-fill { fill: var(--garment-color, #ce8279); }
+    .garment-detail { fill: none; stroke: rgb(255 255 255 / 64%); stroke-linecap: round; stroke-width: 2; }
+    .shoe-shape { fill: var(--shoe-color, #65544d); }
+    .accessory-fill { fill: var(--accessory-color, #c99a5c); }
+    @keyframes garment-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    .photo-preview { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .24; display: none; }
+    .stage.has-photo .photo-preview { display: block; }
+    .photo-preview + .photo-wash { position: absolute; z-index: 0; inset: 0; display: none; background: rgb(243 238 230 / 48%); }
+    .stage.has-photo .photo-wash { display: block; }
+    .stage[data-view="tenis"] .model-wrap { transform: scale(1.11) translateY(-8px); }
+    .stage[data-view="foto"] .stage-caption span { max-width: 210px; }
+    .stage-footer { min-height: 60px; display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 16px; border-top: 1px solid var(--line); }
+    .outfit-summary { min-width: 0; }
+    .outfit-summary strong { display: block; margin-bottom: 3px; font-size: 10px; font-weight: 600; }
+    .outfit-summary span { display: block; max-width: 290px; overflow: hidden; color: var(--muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+    .reset-button { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 7px 9px; border: 0; border-radius: 3px; background: transparent; color: #726b61; font-size: 10px; cursor: pointer; }
+    .reset-button:hover { background: #f0e8df; }
+    .reset-button svg { width: 14px; height: 14px; }
+
+    .customizer { min-height: 650px; padding-bottom: 14px; }
+    .customizer .panel-heading { border-bottom: 1px solid var(--line); }
+    .custom-section { padding: 16px 16px 14px; border-bottom: 1px solid #e9e3da; }
+    .section-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 11px; }
+    .section-heading h3 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 15px; font-weight: 400; }
+    .section-hint { color: var(--muted); font-size: 9px; }
+    .color-row { display: flex; align-items: center; gap: 11px; }
+    .color-wheel-wrap { width: 47px; height: 47px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 50%; background: conic-gradient(#db5b59, #e49a42, #d5c74b, #70a877, #55a6a7, #687db8, #a56ca5, #db5b59); }
+    .color-wheel { width: 36px; height: 36px; padding: 0; overflow: hidden; border: 3px solid var(--white); border-radius: 50%; background: transparent; cursor: pointer; appearance: none; -webkit-appearance: none; }
+    .color-wheel::-webkit-color-swatch-wrapper { padding: 0; }
+    .color-wheel::-webkit-color-swatch { border: 0; border-radius: 50%; }
+    .color-wheel::-moz-color-swatch { border: 0; border-radius: 50%; }
+    .palette { display: flex; flex-wrap: wrap; gap: 6px; }
+    .swatch { width: 19px; height: 19px; padding: 0; border: 1px solid rgb(48 43 37 / 13%); border-radius: 50%; background: var(--swatch-color); cursor: pointer; transition: transform .18s, outline .18s; }
+    .swatch:hover, .swatch[aria-pressed="true"] { transform: scale(1.16); outline: 2px solid #a68e78; outline-offset: 2px; }
+    .color-label { margin-top: 6px; color: var(--muted); font-size: 9px; }
+    .skin-grid { display: flex; align-items: center; gap: 9px; }
+    .skin-choice { width: 27px; height: 27px; padding: 0; border: 2px solid transparent; border-radius: 50%; background: var(--tone); cursor: pointer; }
+    .skin-choice[aria-pressed="true"] { outline: 1px solid #766b5f; outline-offset: 2px; }
+    .hair-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .hair-choice { min-height: 60px; display: grid; place-items: center; gap: 2px; padding: 5px 3px; border: 1px solid var(--line); border-radius: 3px; background: #fffefa; color: #615d55; font-size: 9px; cursor: pointer; }
+    .hair-choice:hover, .hair-choice[aria-pressed="true"] { border-color: #bc9c82; background: #f4ece2; }
+    .hair-preview { width: 24px; height: 27px; border: 3px solid #5b443b; border-radius: 48% 48% 42% 42%; background: linear-gradient(#5b443b 0 34%, #e0b899 35% 100%); }
+    .hair-preview.short { border-radius: 50% 50% 35% 35%; }
+    .hair-preview.coil { border: 0; border-radius: 50%; background: radial-gradient(circle, #e0b899 43%, transparent 45%) 0 0 / 8px 8px, #4d3832; }
+    .size-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; }
+    .size-choice { min-height: 33px; border: 1px solid var(--line); border-radius: 3px; background: #fffefa; color: #625e57; font-size: 11px; cursor: pointer; }
+    .size-choice:hover, .size-choice[aria-pressed="true"] { border-color: #a47d6c; background: #f2e7df; color: #453b34; }
+    .fit-note { margin: 8px 0 0; color: var(--muted); font-size: 9px; line-height: 1.45; }
+    .shortcut-note { display: flex; align-items: center; gap: 9px; padding: 14px 16px 0; color: #78736b; font-size: 10px; line-height: 1.45; }
+    .shortcut-note svg { flex: 0 0 auto; width: 16px; height: 16px; color: #ad8752; }
+
+    .look-tray { position: absolute; z-index: 5; top: 73px; right: 15px; width: min(310px, calc(100% - 30px)); padding: 15px; border: 1px solid #d8cbbd; border-radius: 4px; background: #fffdf9; box-shadow: var(--shadow); animation: tray-in .2s ease both; }
+    @keyframes tray-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+    .look-tray[hidden] { display: none; }
+    .look-tray-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; }
+    .look-tray h2 { margin: 0; font-family: Georgia, "Times New Roman", serif; font-size: 18px; font-weight: 400; }
+    .tray-close { width: 25px; height: 25px; display: grid; place-items: center; border: 0; border-radius: 50%; background: transparent; font-size: 17px; cursor: pointer; }
+    .look-tray p { margin: 0 0 11px; color: var(--muted); font-size: 10px; line-height: 1.5; }
+    .look-form { display: flex; gap: 6px; }
+    .look-input { min-width: 0; flex: 1; height: 36px; padding: 0 9px; border: 1px solid var(--line); border-radius: 3px; background: white; font-size: 11px; }
+    .look-submit { display: grid; place-items: center; width: 38px; border: 0; border-radius: 3px; background: #697866; color: white; cursor: pointer; }
+    .look-submit:hover { background: #52624f; }
+    .look-submit svg { width: 16px; height: 16px; }
+    .look-prompts { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 9px; }
+    .prompt-chip { padding: 5px 7px; border: 1px solid #e5ddd3; border-radius: 20px; background: #faf6f0; color: #6f665b; font-size: 9px; cursor: pointer; }
+    .prompt-chip:hover { background: #eee5da; }
+    .toast { position: fixed; z-index: 10; right: 24px; bottom: 24px; max-width: calc(100vw - 48px); padding: 12px 16px; border: 1px solid #d9cdbf; border-radius: 3px; background: #fffdf9; box-shadow: var(--shadow); color: #4a4941; font-size: 12px; animation: tray-in .2s ease both; }
+    .toast[hidden] { display: none; }
+    .file-input { display: none; }
+    .footer { display: flex; justify-content: space-between; gap: 16px; padding: 15px 2px 0; color: #817c73; font-size: 9px; }
+
+    @media (min-width: 1200px) {
+      .stage { min-height: 545px; }
+      .wardrobe, .fitting-room, .customizer { min-height: 685px; }
+      .items-grid { max-height: 405px; }
+    }
+    @media (max-width: 1050px) {
+      .app-shell { padding-right: 23px; padding-left: 23px; }
+      .workspace { grid-template-columns: minmax(230px, .85fr) minmax(360px, 1.45fr); }
+      .customizer { grid-column: 1 / -1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); padding-bottom: 0; }
+      .customizer .panel-heading { grid-column: 1 / -1; }
+      .custom-section { border-right: 1px solid #e9e3da; border-bottom: 0; }
+      .shortcut-note { display: none; }
+      .items-grid { max-height: 435px; }
+    }
+    @media (max-width: 680px) {
+      .app-shell { padding: 0 13px 22px; }
+      .topbar { height: 67px; }
+      .brand-name { font-size: 19px; }
+      .brand-note, .status { display: none; }
+      .page-intro { align-items: start; padding: 22px 0 18px; }
+      h1 { font-size: 30px; }
+      .intro-copy { display: none; }
+      .workspace { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+      .fitting-room { grid-row: 1; min-height: 550px; }
+      .wardrobe { grid-row: 2; min-height: auto; }
+      .customizer { grid-row: 3; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .customizer .panel-heading { min-height: 55px; }
+      .custom-section { min-height: 106px; padding: 13px 12px; border-top: 1px solid #e9e3da; }
+      .custom-section:nth-of-type(even) { border-right: 0; }
+      .stage-toolbar { min-height: 60px; padding: 9px 10px; }
+      .view-tab { min-height: 36px; padding: 0 9px; font-size: 10px; }
+      .stage { min-height: 435px; }
+      .model-wrap { width: 90%; height: min(420px, 83%); min-height: 345px; }
+      .stage-caption { top: 14px; left: 13px; }
+      .stage-caption strong { font-size: 15px; }
+      .stage-caption span { max-width: 180px; font-size: 9px; }
+      .stage-footer { padding: 8px 11px; }
+      .outfit-summary span { max-width: 190px; }
+      .items-grid { max-height: 360px; }
+      .item-art { height: 80px; }
+      .footer { flex-direction: column; gap: 5px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#inicio" aria-label="Veste-se, início">
+        <span class="brand-mark" aria-hidden="true">v.</span>
+        <span class="brand-name">veste-se</span>
+        <span class="brand-note">seu provador criativo</span>
+      </a>
+      <div class="top-actions">
+        <span class="status">suas escolhas ficam por aqui</span>
+        <button class="icon-button" id="shareButton" type="button" title="Copiar resumo do look" aria-label="Copiar resumo do look">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.7 10.7 6.6-4.4m-6.6 7 6.6 4.4"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main id="inicio">
+      <section class="page-intro" aria-labelledby="pageTitle">
+        <div><p class="eyebrow">Vista o que você imaginar</p><h1>Um look, do seu jeito.</h1></div>
+        <p class="intro-copy">Brinque com formas, cores e combinações. Seu estilo muda de ideia, e tudo bem.</p>
+      </section>
+
+      <section class="workspace" aria-label="Provador virtual">
+        <aside class="panel wardrobe" aria-labelledby="wardrobeTitle">
+          <div class="panel-heading"><h2 class="panel-title" id="wardrobeTitle">Seu guarda-roupa</h2><span class="count" id="itemCount">14 peças</span></div>
+          <label class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 4.5 4.5"/></svg>
+            <input class="search-input" id="catalogSearch" type="search" placeholder="Buscar uma peça..." autocomplete="off" aria-label="Buscar roupas e acessórios">
+          </label>
+          <nav class="category-list" id="categoryList" aria-label="Categorias de roupas"></nav>
+          <div class="catalog-head"><h3 class="catalog-label" id="catalogLabel">Todas as peças</h3><span class="count" id="visibleCount"></span></div>
+          <div class="items-grid" id="itemsGrid" aria-live="polite"></div>
+        </aside>
+
+        <section class="panel fitting-room" aria-label="Manequim e montagem do look">
+          <div class="stage-toolbar">
+            <div class="view-tabs" role="tablist" aria-label="Visualização do provador">
+              <button class="view-tab" id="tabFoto" type="button" role="tab" aria-selected="false" data-view="foto">Foto</button>
+              <button class="view-tab" id="tabTenis" type="button" role="tab" aria-selected="false" data-view="tenis">Tênis</button>
+              <button class="view-tab" id="tabManequim" type="button" role="tab" aria-selected="true" data-view="manequim">Manequim</button>
+            </div>
+            <div class="stage-tools">
+              <button class="tool-button" id="photoButton" type="button" title="Adicionar foto do dispositivo" aria-label="Adicionar foto do dispositivo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7.5h3l1.5-2h7l1.5 2h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+              </button>
+              <button class="tool-button bulb-button" id="lookButton" type="button" title="Montar look automaticamente" aria-label="Montar look automaticamente" aria-expanded="false" aria-controls="lookTray">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6m-5 3h4m-2-19a7 7 0 0 0-4 12.7c.8.6 1 1.3 1 2.3h6c0-1 .2-1.7 1-2.3A7 7 0 0 0 12 2Z"/><path d="M12 5v2m-5 2 1.4 1.4m7.2 0L17 9"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="stage" id="stage" data-view="manequim">
+            <img class="photo-preview" id="photoPreview" alt="Foto escolhida como referência do look">
+            <div class="photo-wash" aria-hidden="true"></div>
+            <div class="stage-caption"><strong id="stageTitle">Seu manequim</strong><span id="stageDescription">Escolha uma peça para começar a compor.</span></div>
+            <div class="model-wrap" id="modelWrap">
+              <svg class="mannequin" id="mannequin" viewBox="0 0 300 500" role="img" aria-label="Ilustração de manequim personalizável">
+                <defs>
+                  <linearGradient id="skinShade" x1="0" x2="1" y1="0" y2="1"><stop offset="0" stop-color="#ffffff" stop-opacity=".12"/><stop offset="1" stop-color="#704c3e" stop-opacity=".1"/></linearGradient>
+                </defs>
+                <ellipse cx="150" cy="480" rx="78" ry="8" fill="#817664" opacity=".15"/>
+                <path class="hair-back" id="hairBack" d="M116 88c-2-42 17-64 39-64 28 0 43 23 38 66l-10 61h-59z"/>
+                <path class="body-shape" d="M132 91h36v43h-36z"/>
+                <path class="body-shape" id="bodyShape" d="M131 122c-19 2-36 13-43 33l-30 99c-3 10 2 18 10 20 8 2 14-4 17-12l25-67-11 84c-3 24-5 46-5 72v86c0 12 7 19 16 19s15-7 15-18l8-107 8 107c1 11 7 18 16 18s16-7 16-19v-86c0-26-2-51-5-72l-11-84 25 67c3 8 9 14 17 12 8-2 13-10 10-20l-30-99c-7-20-24-31-43-33z"/>
+                <path class="body-shape" d="M126 53c0-22 11-35 25-35s25 13 25 35v24c0 24-11 39-25 39s-25-15-25-39z"/>
+                <path fill="url(#skinShade)" d="M126 53c0-22 11-35 25-35s25 13 25 35v24c0 24-11 39-25 39s-25-15-25-39z"/>
+                <path class="hair-front" id="hairFront" d="M126 57c2-29 12-42 27-42 18 0 28 15 27 38-9-8-17-12-27-12-8 9-16 13-27 16z"/>
+
+                <g class="garment" data-slot="dress" id="garment-dress" style="--garment-color:#ce8279">
+                  <path class="garment-fill" d="M119 126c8-6 19-9 31-9s23 3 31 9l8 24 31 12-24 47-18-10 4 25 44 185H74l44-185 4-25-18 10-18-47 31-12z"/>
+                  <path class="garment-detail" d="M128 122c4 16 13 25 22 25s18-9 22-25M116 205h68M130 151l-9 30m45-30 9 30"/>
+                </g>
+                <g class="garment" data-slot="top" id="garment-top" style="--garment-color:#879880">
+                  <path class="garment-fill" d="M119 126c8-6 19-9 31-9s23 3 31 9l8 24 31 12-24 47-18-10-4 24h-48l-4-24-18 10-24-47 31-12z"/>
+                  <path class="garment-detail" d="M128 121c4 16 13 25 22 25s18-9 22-25M119 211h62M150 148v55"/>
+                </g>
+                <g class="garment" data-slot="bottom" id="garment-pants" style="--garment-color:#6e7885">
+                  <path class="garment-fill" d="M103 219h94l20 261h-45l-22-187-22 187H83z"/>
+                  <path class="garment-detail" d="M105 235h90m-47 4-1 48"/>
+                </g>
+                <g class="garment" data-slot="bottom" id="garment-shorts" style="--garment-color:#cfaa72">
+                  <path class="garment-fill" d="M103 218h94l9 109h-47l-9-54-9 54H94z"/>
+                  <path class="garment-detail" d="M105 235h90m-46 4v32"/>
+                </g>
+                <g class="garment" data-slot="socks" id="garment-socks" style="--garment-color:#f4eee5">
+                  <path class="garment-fill" d="M101 397h29l-4 65c-1 12-8 18-21 18H86v-12l14-10zm69 0h29l8 61 14 10v12h-19c-13 0-20-6-21-18z"/>
+                  <path class="garment-detail" d="M100 412h28m47 0h28"/>
+                </g>
+                <g class="garment" data-slot="shoes" id="garment-shoes" style="--shoe-color:#65544d">
+                  <path class="shoe-shape" d="M86 459c10 5 25 5 39-1 4 10 8 14 15 19 6 4 4 10-4 11H83c-8 0-11-5-8-12zm88 0c10 5 25 5 39-1 4 10 8 14 15 19 6 4 4 10-4 11h-53c-8 0-11-5-8-12z"/>
+                  <path fill="none" stroke="#fff" stroke-linecap="round" stroke-width="2" d="m92 472 17 1m74-1 17 1" opacity=".7"/>
+                </g>
+                <g class="garment" data-slot="accessory" id="garment-accessory" style="--accessory-color:#d3a552">
+                  <path class="accessory-fill" d="M126 141c5-5 12-8 24-8s19 3 24 8l-5 13h-38z"/>
+                  <circle cx="150" cy="157" r="3" fill="#f7e8ba"/>
+                  <path d="M191 185c20 2 30 12 29 28l-3 53h-44l2-53c0-15 5-24 16-28z" fill="var(--accessory-color,#d3a552)"/>
+                  <path d="M193 187c-1-16-5-22-13-25" fill="none" stroke="var(--accessory-color,#d3a552)" stroke-width="5" stroke-linecap="round"/>
+                </g>
+                <g class="garment" data-slot="accessory" id="garment-hat" style="--accessory-color:#b99a72">
+                  <path class="accessory-fill" d="M113 38c2-20 15-31 37-31s35 11 37 31h-74zM103 38h94v8h-94z"/>
+                  <path fill="none" stroke="#fff" stroke-width="3" d="M117 37h66" opacity=".6"/>
+                </g>
+              </svg>
+            </div>
+            <div class="look-tray" id="lookTray" hidden>
+              <div class="look-tray-head"><h2>Uma ideia de look</h2><button class="tray-close" id="closeLookTray" type="button" aria-label="Fechar">×</button></div>
+              <p>Conte a ocasião, a peça ou o clima. Eu combino o que tem por aqui.</p>
+              <form class="look-form" id="lookForm">
+                <input class="look-input" id="lookPrompt" type="search" placeholder="Ex.: passeio leve no fim de semana" autocomplete="off" aria-label="Descreva o look que deseja">
+                <button class="look-submit" type="submit" title="Criar combinação" aria-label="Criar combinação"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 14-7-5 14-3-6zM11 13l8-8"/></svg></button>
+              </form>
+              <div class="look-prompts" aria-label="Sugestões rápidas">
+                <button class="prompt-chip" type="button">Dia casual</button><button class="prompt-chip" type="button">Jantar</button><button class="prompt-chip" type="button">Colorido</button>
+              </div>
+            </div>
+          </div>
+          <div class="stage-footer">
+            <div class="outfit-summary"><strong>Look em construção</strong><span id="outfitSummary">Seu próximo favorito começa com uma peça.</span></div>
+            <button class="reset-button" id="resetButton" type="button" title="Limpar todas as peças">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Limpar
+            </button>
+          </div>
+          <input class="file-input" id="photoInput" type="file" accept="image/*" aria-label="Escolher uma foto do dispositivo">
+        </section>
+
+        <aside class="panel customizer" aria-labelledby="customizerTitle">
+          <div class="panel-heading"><h2 class="panel-title" id="customizerTitle">Seu toque</h2><span class="count">personalize</span></div>
+          <section class="custom-section" aria-labelledby="colorHeading">
+            <div class="section-heading"><h3 id="colorHeading">Roda de cores</h3><span class="section-hint">na peça ativa</span></div>
+            <div class="color-row">
+              <label class="color-wheel-wrap" title="Escolher uma cor personalizada"><input class="color-wheel" id="colorWheel" type="color" value="#ce8279" aria-label="Escolher cor da peça"></label>
+              <div><div class="palette" id="palette"></div><div class="color-label" id="colorLabel">Rosa queimado</div></div>
+            </div>
+          </section>
+          <section class="custom-section" aria-labelledby="skinHeading">
+            <div class="section-heading"><h3 id="skinHeading">Tom de pele</h3><span class="section-hint">seu manequim</span></div>
+            <div class="skin-grid" id="skinGrid" role="group" aria-label="Escolha o tom de pele"></div>
+          </section>
+          <section class="custom-section" aria-labelledby="hairHeading">
+            <div class="section-heading"><h3 id="hairHeading">Penteado</h3><span class="section-hint">mude o visual</span></div>
+            <div class="hair-grid" id="hairGrid" role="group" aria-label="Escolha um penteado"></div>
+          </section>
+          <section class="custom-section" aria-labelledby="sizeHeading">
+            <div class="section-heading"><h3 id="sizeHeading">Tamanho</h3><span class="section-hint">manequim</span></div>
+            <div class="size-grid" id="sizeGrid" role="group" aria-label="Escolha o tamanho"></div>
+            <p class="fit-note" id="fitNote">M · proporção regular</p>
+          </section>
+          <div class="shortcut-note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 7v5c0 5 3.4 8.2 8 10 4.6-1.8 8-5 8-10V7z"/><path d="m9 12 2 2 4-4"/></svg>Suas fotos e escolhas ficam apenas neste dispositivo.</div>
+        </aside>
+      </section>
+      <footer class="footer"><span>Veste-se · um espaço para experimentar</span><span>Feito para brincar com o seu estilo.</span></footer>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+  <script>
+    (() => {
+      const categories = [
+        { id: "all", label: "Todas", icon: "✳" },
+        { id: "shorts", label: "Shorts", icon: "⌑" },
+        { id: "tops", label: "Camisetas", icon: "◌" },
+        { id: "dresses", label: "Vestidos", icon: "♧" },
+        { id: "pants", label: "Calças", icon: "∥" },
+        { id: "socks", label: "Meias", icon: "▤" },
+        { id: "shoes", label: "Sapatos", icon: "⌁" },
+        { id: "accessories", label: "Acessórios", icon: "◇" }
+      ];
+      const items = [
+        { id: "tee", name: "Camiseta essencial", category: "tops", slot: "top", color: "#879880", colorName: "Sálvia", art: "top", keywords: "casual básica algodão dia" },
+        { id: "blouse", name: "Blusa de linho", category: "tops", slot: "top", color: "#e2bd9b", colorName: "Linho", art: "top", keywords: "jantar elegante linho" },
+        { id: "striped", name: "Listras de verão", category: "tops", slot: "top", color: "#638c94", colorName: "Azul oceano", art: "top", keywords: "praia passeio colorido" },
+        { id: "shorts", name: "Shorts leve", category: "shorts", slot: "bottom", shape: "shorts", color: "#cfaa72", colorName: "Areia", art: "shorts", keywords: "casual verão passeio" },
+        { id: "denimshorts", name: "Shorts jeans", category: "shorts", slot: "bottom", shape: "shorts", color: "#758ba0", colorName: "Jeans", art: "shorts", keywords: "casual jeans passeio" },
+        { id: "dress", name: "Vestido midi", category: "dresses", slot: "dress", color: "#ce8279", colorName: "Rosa queimado", art: "dress", keywords: "jantar encontro elegante" },
+        { id: "sundress", name: "Vestido solar", category: "dresses", slot: "dress", color: "#d2bb70", colorName: "Girassol", art: "dress", keywords: "colorido verão passeio" },
+        { id: "pants", name: "Calça reta", category: "pants", slot: "bottom", shape: "pants", color: "#6e7885", colorName: "Chumbo", art: "pants", keywords: "trabalho elegante dia" },
+        { id: "linenpants", name: "Calça de linho", category: "pants", slot: "bottom", shape: "pants", color: "#b3a68e", colorName: "Linho natural", art: "pants", keywords: "casual trabalho passeio" },
+        { id: "socks", name: "Meia canelada", category: "socks", slot: "socks", color: "#f4eee5", colorName: "Baunilha", art: "socks", keywords: "casual tênis" },
+        { id: "sneakers", name: "Tênis clássico", category: "shoes", slot: "shoes", color: "#eee8df", colorName: "Off-white", art: "shoes", keywords: "casual confortável passeio dia" },
+        { id: "loafers", name: "Mocassim macio", category: "shoes", slot: "shoes", color: "#745547", colorName: "Cacau", art: "shoes", keywords: "jantar elegante trabalho" },
+        { id: "bag", name: "Bolsa de ombro", category: "accessories", slot: "accessory", shape: "accessory", color: "#d3a552", colorName: "Mel", art: "bag", keywords: "jantar passeio elegante" },
+        { id: "hat", name: "Chapéu de palha", category: "accessories", slot: "accessory", shape: "hat", color: "#b99a72", colorName: "Palha", art: "hat", keywords: "praia verão passeio" }
+      ];
+      const colors = [
+        { hex: "#ce8279", name: "Rosa queimado" }, { hex: "#879880", name: "Sálvia" },
+        { hex: "#638c94", name: "Azul oceano" }, { hex: "#d2bb70", name: "Girassol" },
+        { hex: "#745547", name: "Cacau" }, { hex: "#f0e8dc", name: "Baunilha" },
+        { hex: "#8e7695", name: "Ameixa" }, { hex: "#d67c56", name: "Terracota" },
+        { hex: "#333b37", name: "Floresta" }, { hex: "#8ca9c1", name: "Céu" }
+      ];
+      const skinTones = [
+        { name: "Porcelana", color: "#f0d7c1", hair: "#56443c" },
+        { name: "Pêssego", color: "#e5bd9e", hair: "#4e3a32" },
+        { name: "Mel", color: "#d29e76", hair: "#49372f" },
+        { name: "Canela", color: "#ad7653", hair: "#382c29" },
+        { name: "Ébano", color: "#754d3b", hair: "#292322" }
+      ];
+      const hairstyles = [
+        { id: "long", label: "Longo", back: "M116 88c-2-42 17-64 39-64 28 0 43 23 38 66l-10 61h-59z", front: "M126 57c2-29 12-42 27-42 18 0 28 15 27 38-9-8-17-12-27-12-8 9-16 13-27 16z", preview: "" },
+        { id: "curly", label: "Cacheado", back: "M117 84c-7-40 9-65 37-65 30 0 43 26 37 65l-12 48h-51z", front: "M122 59c-8-24 4-45 30-45 24 0 35 19 27 42-7-9-13-13-23-15-10 13-20 17-34 18z", preview: "coil" },
+        { id: "short", label: "Curto", back: "M119 70c-4-31 9-51 34-51 25 0 38 20 34 51l-5 20h-57z", front: "M120 59c-3-27 10-44 33-44 22 0 36 17 33 41-9-9-19-13-30-13-10 10-22 15-36 16z", preview: "short" }
+      ];
+      const sizes = [
+        { id: "P", scale: .91, description: "proporção delicada" },
+        { id: "M", scale: 1, description: "proporção regular" },
+        { id: "G", scale: 1.09, description: "proporção ampla" }
+      ];
+      const slots = { top: null, bottom: null, dress: null, socks: null, shoes: null, accessory: null };
+      let activeCategory = "all";
+      let activeSlot = "top";
+      let selectedSize = "M";
+      let selectedSkin = 1;
+      let currentPhotoUrl = null;
+      let toastTimer;
+
+      const categoryList = document.getElementById("categoryList");
+      const itemsGrid = document.getElementById("itemsGrid");
+      const catalogSearch = document.getElementById("catalogSearch");
+      const stage = document.getElementById("stage");
+      const lookTray = document.getElementById("lookTray");
+      const colorWheel = document.getElementById("colorWheel");
+      const photoInput = document.getElementById("photoInput");
+      const photoPreview = document.getElementById("photoPreview");
+      const modelWrap = document.getElementById("modelWrap");
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+      }
+
+      function renderCategories() {
+        categoryList.innerHTML = categories.map((category) => `
+          <button class="category-button" type="button" data-category="${category.id}" aria-pressed="${activeCategory === category.id}">
+            <span class="category-icon" aria-hidden="true">${category.icon}</span>${category.label}
+          </button>`).join("");
+        categoryList.querySelectorAll("button").forEach((button) => {
+          button.addEventListener("click", () => {
+            activeCategory = button.dataset.category;
+            renderCategories();
+            renderItems();
+          });
+        });
+      }
+
+      function artFor(item) {
+        const color = escapeHtml(item.color);
+        const shapes = {
+          top: `<path d="M21 21 29 8h14l8 13-7 4-4-6v27H32V19l-4 6zm14-13a7 7 0 0 0 4 0" fill="${color}"/><path d="M33 20v24m7-24v24" stroke="#fff" stroke-opacity=".5" stroke-width="1.5"/>`,
+          shorts: `<path d="M21 12h30l-3 35H34l-3-17-3 17H18z" fill="${color}"/><path d="M22 18h28m-15 1v10" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>`,
+          dress: `<path d="m29 9 6-3 6 3 3 9 8 4-6 11-5-3 9 18H16l9-18-5 3-6-11 8-4z" fill="${color}"/><path d="M30 8c0 7 2 10 5 10s5-3 5-10m-15 17h20" fill="none" stroke="#fff" stroke-opacity=".65" stroke-width="1.6"/>`,
+          pants: `<path d="M22 10h28l6 38H42l-6-25-6 25H16z" fill="${color}"/><path d="M22 16h28m-14 1v7" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>`,
+          socks: `<path d="M24 8h10v25l8 7v7H19v-6l5-4zm16 0h10v24l7 8v7H38v-6l2-5z" fill="${color}"/><path d="M24 14h10m6 0h10" stroke="#fff" stroke-opacity=".7" stroke-width="2"/>`,
+          shoes: `<path d="M12 33c8 2 15 2 20-3l7 9 11 4c5 2 5 7 0 8H15c-5 0-7-4-4-8zm26 0c8 2 15 2 20-3l7 9 11 4c5 2 5 7 0 8H41c-5 0-7-4-4-8z" transform="translate(-13 -3) scale(.8)" fill="${color}"/><path d="m18 39 13 1m6-1 13 1" stroke="#fff" stroke-opacity=".65" stroke-width="1.5"/>`,
+          bag: `<path d="M20 20h26l3 27H17zm6 1c0-13 14-13 14 0" fill="${color}"/><path d="M28 31h10" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>`,
+          hat: `<path d="M17 28c1-13 7-20 16-20s15 7 16 20H17zm-6 1h44v5H11z" fill="${color}"/><path d="M22 27h22" stroke="#fff" stroke-opacity=".6" stroke-width="1.5"/>`
+        };
+        return `<svg viewBox="0 0 70 60" aria-hidden="true">${shapes[item.art]}</svg>`;
+      }
+
+      function renderItems() {
+        const query = catalogSearch.value.trim().toLocaleLowerCase("pt-BR");
+        const filtered = items.filter((item) => {
+          const matchesCategory = activeCategory === "all" || item.category === activeCategory;
+          const categoryLabel = categories.find((category) => category.id === item.category)?.label ?? "";
+          const text = `${item.name} ${categoryLabel} ${item.colorName} ${item.keywords}`.toLocaleLowerCase("pt-BR");
+          return matchesCategory && (!query || text.includes(query));
+        });
+        const categoryLabel = categories.find((category) => category.id === activeCategory)?.label ?? "Todas as peças";
+        document.getElementById("catalogLabel").textContent = activeCategory === "all" ? "Todas as peças" : categoryLabel;
+        document.getElementById("visibleCount").textContent = `${filtered.length} ${filtered.length === 1 ? "peça" : "peças"}`;
+        document.getElementById("itemCount").textContent = `${items.length} peças`;
+        itemsGrid.innerHTML = filtered.length ? filtered.map((item) => `
+          <button class="item-card" type="button" data-item="${item.id}" aria-pressed="${slots[item.slot] === item.id}" aria-label="Experimentar ${escapeHtml(item.name)}">
+            <span class="item-art" style="--swatch:${item.color}">${artFor(item)}</span>
+            <span class="item-name">${escapeHtml(item.name)}</span><span class="item-meta">${escapeHtml(item.colorName)}</span>
+          </button>`).join("") : `<div class="empty-state">Nenhuma peça encontrada.<br>Que tal tentar outra busca?</div>`;
+        itemsGrid.querySelectorAll("[data-item]").forEach((button) => button.addEventListener("click", () => selectItem(button.dataset.item)));
+      }
+
+      function applyColorToItem(item, color) {
+        item.color = color;
+        const closestColor = colors.find((entry) => entry.hex.toLowerCase() === color.toLowerCase());
+        item.colorName = closestColor?.name ?? "Cor personalizada";
+        const garment = garmentFor(item);
+        if (garment) {
+          if (item.slot === "shoes") garment.style.setProperty("--shoe-color", color);
+          else if (item.slot === "accessory") garment.style.setProperty("--accessory-color", color);
+          else garment.style.setProperty("--garment-color", color);
+        }
+      }
+
+      function garmentFor(item) {
+        if (!item) return null;
+        const id = item.shape === "pants" ? "garment-pants" : item.shape === "shorts" ? "garment-shorts" : item.shape === "hat" ? "garment-hat" : item.shape === "accessory" ? "garment-accessory" : `garment-${item.slot}`;
+        return document.getElementById(id);
+      }
+
+      function selectItem(id) {
+        const item = items.find((entry) => entry.id === id);
+        if (!item) return;
+        if (item.slot === "bottom") {
+          document.getElementById("garment-pants").classList.remove("is-on");
+          document.getElementById("garment-shorts").classList.remove("is-on");
+        }
+        if (item.slot === "accessory") {
+          document.getElementById("garment-accessory").classList.remove("is-on");
+          document.getElementById("garment-hat").classList.remove("is-on");
+        }
+        if (item.slot === "dress") {
+          document.getElementById("garment-top").classList.remove("is-on");
+          document.getElementById("garment-pants").classList.remove("is-on");
+          document.getElementById("garment-shorts").classList.remove("is-on");
+          slots.top = null;
+          slots.bottom = null;
+        } else if (item.slot === "top" || item.slot === "bottom") {
+          document.getElementById("garment-dress").classList.remove("is-on");
+          slots.dress = null;
+        }
+        const oldId = slots[item.slot];
+        if (oldId && oldId !== id) {
+          const oldItem = items.find((entry) => entry.id === oldId);
+          garmentFor(oldItem)?.classList.remove("is-on");
+        }
+        slots[item.slot] = id;
+        activeSlot = item.slot;
+        const garment = garmentFor(item);
+        applyColorToItem(item, item.color);
+        garment?.classList.add("is-on");
+        colorWheel.value = item.color;
+        document.getElementById("colorLabel").textContent = item.colorName;
+        document.querySelectorAll(".swatch").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.color.toLowerCase() === item.color.toLowerCase())));
+        renderItems();
+        updateSummary();
+        if (item.slot === "shoes") setView("tenis");
+      }
+
+      function updateSummary() {
+        const selected = Object.values(slots).filter(Boolean).map((id) => items.find((item) => item.id === id)).filter(Boolean);
+        const summary = selected.map((item) => item.name).join(" · ");
+        document.getElementById("outfitSummary").textContent = summary || "Seu próximo favorito começa com uma peça.";
+        document.querySelector(".outfit-summary strong").textContent = selected.length ? `${selected.length} ${selected.length === 1 ? "peça" : "peças"} no look` : "Look em construção";
+      }
+
+      function renderPalette() {
+        document.getElementById("palette").innerHTML = colors.map((color) => `<button class="swatch" type="button" style="--swatch-color:${color.hex}" data-color="${color.hex}" aria-label="${color.name}" title="${color.name}" aria-pressed="false"></button>`).join("");
+        document.getElementById("palette").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => setActiveColor(button.dataset.color)));
+      }
+
+      function setActiveColor(color) {
+        const item = items.find((entry) => entry.id === slots[activeSlot]);
+        if (!item) {
+          showToast("Escolha uma peça antes de mudar a cor.");
+          return;
+        }
+        applyColorToItem(item, color);
+        colorWheel.value = color;
+        document.getElementById("colorLabel").textContent = item.colorName;
+        document.querySelectorAll(".swatch").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.color.toLowerCase() === color.toLowerCase())));
+        renderItems();
+        updateSummary();
+      }
+
+      function renderSkins() {
+        document.getElementById("skinGrid").innerHTML = skinTones.map((skin, index) => `<button class="skin-choice" type="button" style="--tone:${skin.color}" data-skin="${index}" aria-label="Tom ${skin.name}" title="${skin.name}" aria-pressed="${index === selectedSkin}"></button>`).join("");
+        document.getElementById("skinGrid").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+          selectedSkin = Number(button.dataset.skin);
+          document.getElementById("bodyShape").style.setProperty("--skin", skinTones[selectedSkin].color);
+          document.querySelectorAll(".body-shape").forEach((shape) => shape.style.setProperty("--skin", skinTones[selectedSkin].color));
+          document.querySelectorAll(".skin-choice").forEach((choice) => choice.setAttribute("aria-pressed", String(choice.dataset.skin === button.dataset.skin)));
+          if (selectedSkin === 0) document.documentElement.style.setProperty("--skin", skinTones[selectedSkin].color);
+          document.getElementById("mannequin").querySelectorAll(".body-shape").forEach((shape) => shape.setAttribute("fill", skinTones[selectedSkin].color));
+        }));
+      }
+
+      function renderHair() {
+        document.getElementById("hairGrid").innerHTML = hairstyles.map((style, index) => `<button class="hair-choice" type="button" data-hair="${style.id}" aria-pressed="${index === 0}"><span class="hair-preview ${style.preview}" aria-hidden="true"></span>${style.label}</button>`).join("");
+        document.getElementById("hairGrid").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+          const style = hairstyles.find((entry) => entry.id === button.dataset.hair);
+          document.getElementById("hairBack").setAttribute("d", style.back);
+          document.getElementById("hairFront").setAttribute("d", style.front);
+          document.querySelectorAll(".hair-choice").forEach((choice) => choice.setAttribute("aria-pressed", String(choice === button)));
+        }));
+      }
+
+      function renderSizes() {
+        document.getElementById("sizeGrid").innerHTML = sizes.map((size) => `<button class="size-choice" type="button" data-size="${size.id}" aria-pressed="${size.id === selectedSize}">${size.id}</button>`).join("");
+        document.getElementById("sizeGrid").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+          selectedSize = button.dataset.size;
+          const size = sizes.find((entry) => entry.id === selectedSize);
+          modelWrap.style.transform = `scaleX(${size.scale})`;
+          stage.dataset.view === "tenis" && (modelWrap.style.transform = `scale(${1.11 * size.scale}, 1.11)`);
+          document.getElementById("fitNote").textContent = `${size.id} · ${size.description}`;
+          document.querySelectorAll(".size-choice").forEach((choice) => choice.setAttribute("aria-pressed", String(choice === button)));
+        }));
+      }
+
+      function setView(view) {
+        stage.dataset.view = view;
+        document.querySelectorAll(".view-tab").forEach((tab) => tab.setAttribute("aria-selected", String(tab.dataset.view === view)));
+        const copy = {
+          foto: ["Seu espaço", currentPhotoUrl ? "Sua foto está como referência para o look." : "Adicione uma foto do seu dispositivo como referência."],
+          tenis: ["Dos pés pra cima", "Escolha um par para completar a produção."],
+          manequim: ["Seu manequim", "Escolha uma peça para começar a compor."]
+        }[view];
+        document.getElementById("stageTitle").textContent = copy[0];
+        document.getElementById("stageDescription").textContent = copy[1];
+        if (view === "tenis") {
+          activeCategory = "shoes";
+          renderCategories();
+          renderItems();
+        }
+        if (view === "foto" && !currentPhotoUrl) photoInput.click();
+        if (view === "manequim") {
+          modelWrap.style.transform = `scaleX(${sizes.find((size) => size.id === selectedSize).scale})`;
+        }
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.hidden = false;
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => { toast.hidden = true; }, 2500);
+      }
+
+      function generateLook(prompt) {
+        const query = prompt.trim().toLocaleLowerCase("pt-BR");
+        const keywords = query.split(/[^\p{L}\p{N}]+/u).filter((word) => word.length > 2);
+        const score = (item) => keywords.reduce((total, word) => total + (`${item.name} ${item.colorName} ${item.keywords} ${categories.find((category) => category.id === item.category)?.label ?? ""}`.toLocaleLowerCase("pt-BR").includes(word) ? 2 : 0), 0);
+        const tops = items.filter((item) => item.slot === "top");
+        const bottoms = items.filter((item) => item.slot === "bottom");
+        const dresses = items.filter((item) => item.slot === "dress");
+        const shoes = items.filter((item) => item.slot === "shoes");
+        const accessories = items.filter((item) => item.slot === "accessory");
+        const useDress = /vestid|jantar|encontro|elegant/.test(query) && !/cal[cç]a|short/.test(query);
+        const choose = (list, offset = 0) => list.slice().sort((first, second) => score(second) - score(first))[offset % list.length];
+        const selection = useDress
+          ? [choose(dresses), choose(shoes), choose(accessories, /praia|ver[aã]o/.test(query) ? 1 : 0)]
+          : [choose(tops), choose(bottoms), choose(shoes), choose(accessories, /praia|ver[aã]o|colorid/.test(query) ? 1 : 0)];
+        Object.values(slots).filter(Boolean).forEach((id) => {
+          const item = items.find((entry) => entry.id === id);
+          garmentFor(item)?.classList.remove("is-on");
+        });
+        Object.keys(slots).forEach((slot) => { slots[slot] = null; });
+        selection.filter(Boolean).forEach((item) => selectItem(item.id));
+        setView("manequim");
+        lookTray.hidden = true;
+        document.getElementById("lookButton").setAttribute("aria-expanded", "false");
+        showToast(query ? `Look montado para: ${prompt.trim()}.` : "Uma combinação nova, pronta para experimentar.");
+      }
+
+      renderCategories();
+      renderItems();
+      renderPalette();
+      renderSkins();
+      renderHair();
+      renderSizes();
+
+      catalogSearch.addEventListener("input", renderItems);
+      colorWheel.addEventListener("input", () => setActiveColor(colorWheel.value));
+      document.querySelectorAll(".view-tab").forEach((tab) => tab.addEventListener("click", () => setView(tab.dataset.view)));
+      document.getElementById("lookButton").addEventListener("click", () => {
+        lookTray.hidden = !lookTray.hidden;
+        document.getElementById("lookButton").setAttribute("aria-expanded", String(!lookTray.hidden));
+        if (!lookTray.hidden) document.getElementById("lookPrompt").focus();
+      });
+      document.getElementById("closeLookTray").addEventListener("click", () => {
+        lookTray.hidden = true;
+        document.getElementById("lookButton").setAttribute("aria-expanded", "false");
+      });
+      document.getElementById("lookForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        generateLook(document.getElementById("lookPrompt").value);
+      });
+      document.querySelectorAll(".prompt-chip").forEach((button) => button.addEventListener("click", () => generateLook(button.textContent)));
+      document.getElementById("photoButton").addEventListener("click", () => photoInput.click());
+      photoInput.addEventListener("change", () => {
+        const file = photoInput.files?.[0];
+        if (!file) return;
+        if (currentPhotoUrl) URL.revokeObjectURL(currentPhotoUrl);
+        currentPhotoUrl = URL.createObjectURL(file);
+        photoPreview.src = currentPhotoUrl;
+        stage.classList.add("has-photo");
+        setView("foto");
+      });
+      document.getElementById("resetButton").addEventListener("click", () => {
+        document.querySelectorAll(".garment.is-on").forEach((garment) => garment.classList.remove("is-on"));
+        Object.keys(slots).forEach((slot) => { slots[slot] = null; });
+        activeCategory = "all";
+        activeSlot = "top";
+        catalogSearch.value = "";
+        renderCategories();
+        renderItems();
+        updateSummary();
+        setView("manequim");
+        showToast("Manequim pronto para um look novo.");
+      });
+      document.getElementById("shareButton").addEventListener("click", async () => {
+        const chosen = Object.values(slots).filter(Boolean).map((id) => items.find((item) => item.id === id)?.name).filter(Boolean);
+        const text = chosen.length ? `Meu look no Veste-se: ${chosen.join(", ")}. Tamanho ${selectedSize}.` : "Estou montando um look no Veste-se.";
+        try {
+          await navigator.clipboard.writeText(text);
+          showToast("Resumo do look copiado.");
+        } catch {
+          showToast(text);
+        }
+      });
+      document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape" && !lookTray.hidden) {
+          lookTray.hidden = true;
+          document.getElementById("lookButton").setAttribute("aria-expanded", "false");
+          document.getElementById("lookButton").focus();
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
